@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chickpea Gene Expression Atlas v2.0</title>
+
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- Libraries loaded from CDN for GitHub Pages -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">Chickpea Gene Expression Atlas v2.0</div>
+    <nav>
+      <button class="tab-btn active" data-tab="atlas">Expression Atlas</button>
+      <button class="tab-btn" data-tab="bar">Bar Graph</button>
+      <button class="tab-btn" data-tab="heatmap">Heatmap</button>
+      <button class="tab-btn" data-tab="gwas">GWAS Candidate Genes</button>
+      <button class="tab-btn" data-tab="mapper">Chromosome Mapper</button>
+      <button class="tab-btn" data-tab="about">About</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="loading" class="card">
+      <h2>Loading atlas data...</h2>
+      <p>Make sure the required CSV and SVG files are present in the correct folders.</p>
+    </section>
+
+    <!-- Expression Atlas -->
+    <section id="atlas" class="tab-section active">
+      <div class="layout">
+        <aside class="panel">
+          <h3>Gene Search</h3>
+          <input id="geneInput" list="geneList" placeholder="Example: Ca_v2.0_07355" />
+          <datalist id="geneList"></datalist>
+          <button id="loadGene">Load Gene</button>
+
+          <label>Maximum TPM for color scale</label>
+          <input id="maxTPM" type="range" min="1" max="500" value="100" />
+          <span id="maxTPMLabel">100</span>
+
+          <label>Palette</label>
+          <select id="paletteSelect">
+            <option value="YlOrRd">Yellow-orange-red</option>
+            <option value="WhiteYlRed">White-yellow-red</option>
+            <option value="Viridis">Viridis</option>
+            <option value="BlueRed">Blue-white-red</option>
+          </select>
+
+          <label>Atlas outline/stroke</label>
+          <select id="strokeMode">
+            <option>No stroke</option>
+            <option>Black stroke</option>
+            <option>Gray stroke</option>
+            <option>White stroke</option>
+          </select>
+
+          <label>Stroke width</label>
+          <input id="strokeWidth" type="range" min="0" max="5" step="0.25" value="1" />
+
+          <button id="downloadSVG">Download atlas SVG</button>
+        </aside>
+
+        <section class="card grow">
+          <h2>Expression eFP View</h2>
+          <p class="note">Search a gene and visualize tissue-specific expression across chickpea tissues.</p>
+          <div id="svgBox" class="svg-box"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Bar graph -->
+    <section id="bar" class="tab-section">
+      <div class="layout">
+        <aside class="panel">
+          <h3>Bar Graph</h3>
+          <select id="barGene"></select>
+          <label>Tissue group</label>
+          <select id="barGroup"></select>
+          <label><input type="checkbox" id="barLog" checked /> Use log2(TPM + 1)</label>
+          <button id="drawBar">Draw Bar Graph</button>
+        </aside>
+        <section class="card grow">
+          <div id="barPlot" class="plot"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Heatmap -->
+    <section id="heatmap" class="tab-section">
+      <div class="layout">
+        <aside class="panel">
+          <h3>Heatmap</h3>
+          <textarea id="heatmapGenes" rows="8" placeholder="Ca_v2.0_07355&#10;Ca_v2.0_07371"></textarea>
+          <label>Tissue group</label>
+          <select id="heatmapGroup"></select>
+          <label>Value</label>
+          <select id="heatmapScale">
+            <option>log2(TPM + 1)</option>
+            <option>Raw TPM</option>
+            <option>Row-scaled Z-score</option>
+          </select>
+          <button id="drawHeatmap">Draw Heatmap</button>
+        </aside>
+        <section class="card grow">
+          <div id="heatmapPlot" class="plot large"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- GWAS -->
+    <section id="gwas" class="tab-section">
+      <div class="layout">
+        <aside class="panel">
+          <h3>GWAS Candidate Gene Search</h3>
+          <input id="gwasSNP" placeholder="SNP ID optional" />
+          <input id="gwasChr" placeholder="Chromosome, e.g. 3" value="3" />
+          <input id="gwasPos" type="number" value="67821180" />
+          <input id="gwasUp" type="number" value="50000" />
+          <input id="gwasDown" type="number" value="50000" />
+          <button id="searchGWAS">Search candidate genes</button>
+          <button id="downloadGWAS">Download CSV</button>
+        </aside>
+        <section class="card grow">
+          <div id="gwasSummary"></div>
+          <div class="table-wrap">
+            <table id="gwasTable"></table>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Chromosome Mapper -->
+    <section id="mapper" class="tab-section">
+      <div class="layout">
+        <aside class="panel">
+          <h3>Chromosome Mapper</h3>
+
+          <label>Reference version</label>
+          <select id="chrVersion"></select>
+
+          <div id="chrChecks"></div>
+
+          <label>Map title</label>
+          <input id="chrTitle" value="Chickpea chromosome map" />
+
+          <p class="note">Format: Marker_name, start_bp, end_bp. One marker per line or separate by semicolon.</p>
+
+          <div id="markerInputs"></div>
+
+          <h4>Style</h4>
+          <label>Chromosome fill</label>
+          <select id="chrFill">
+            <option value="#f7f7f7">Light gray</option>
+            <option value="#ffffff">White</option>
+            <option value="#e5f5e0">Light green</option>
+            <option value="#deebf7">Light blue</option>
+            <option value="#ffffcc">Light yellow</option>
+          </select>
+
+          <label>Chromosome width</label>
+          <input id="chrWidth" type="range" min="0.08" max="0.45" step="0.01" value="0.22" />
+
+          <label>Label size</label>
+          <input id="chrLabelSize" type="range" min="8" max="22" step="1" value="12" />
+
+          <button id="generateMaps">Generate chromosome map</button>
+        </aside>
+
+        <section class="card grow">
+          <div id="chrMaps"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="tab-section">
+      <section class="card about">
+        <img class="logo" src="www/atlas_logo.png" alt="Atlas logo" />
+        <h1>Chickpea Gene Expression Atlas</h1>
+        <h3>Tennessee State University · Version 2.0</h3>
+
+        <h2>About the Chickpea Gene Expression Atlas</h2>
+        <p>The Chickpea Gene Expression Atlas is an interactive web resource developed to visualize gene expression patterns across 32 chickpea tissues and developmental stages. The resource supports gene search, eFP-style visualization, expression plots, heatmaps, GWAS candidate gene searches, and editable chromosome maps.</p>
+
+        <h2>Development Team</h2>
+        <div class="person"><div><h3>Shubh Pravat Singh Yadav</h3><p>College of Agriculture, Tennessee State University</p><p>Email: sushantpy8500@gmail.com</p></div><img src="www/team/Shubh.jpg" /></div>
+        <div class="person"><div><h3>Kuber Shivashakarappa</h3><p>College of Agriculture, Tennessee State University</p><p>Email: kshivash@my.tnstate.edu</p></div><img src="www/team/Kuber.png" /></div>
+
+        <h2>Faculty Advisors</h2>
+        <div class="person"><div><h3>Dr. Lyle T. Wallace</h3><p>College of Agriculture, Tennessee State University</p></div><img src="www/team/Dr. Wallace.jpg" /></div>
+        <div class="person"><div><h3>Dr. Ali Taheri</h3><p>College of Agriculture, Tennessee State University</p></div><img src="www/team/Dr. Taheri.jpg" /></div>
+
+        <h2>Credit and Data Source</h2>
+        <p>The RNA-seq data used in this resource were obtained from the publicly available chickpea transcriptome dataset deposited under NCBI BioProject PRJNA622231.</p>
+
+        <h2>Transcriptomic Analysis</h2>
+        <p>Raw RNA-seq reads were downloaded from the NCBI Sequence Read Archive, quality-checked, trimmed, and quantified using Salmon against the CDC Frontier reference transcriptome. Transcript-level estimates were summarized to gene-level TPM, and biological replicates were averaged within each tissue to generate tissue-level mean TPM expression matrices.</p>
+      </section>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
