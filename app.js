@@ -867,7 +867,7 @@ async function generateChromosomeMaps() {
         <h3>${chr} map</h3>
         <p class="note">Reference version: ${version}</p>
         <div class="chr-svg-wrap">${svg}</div>
-        <button class="download-btn" onclick="downloadSvgElement('chr_svg_${chr}', '${version}_${chr}_chickpea_chromosome_map.svg')">Download SVG</button>
+        <button class="download-btn" onclick="downloadChrJpgElement('chr_svg_${chr}', '${version}_${chr}_chickpea_chromosome_map.jpg')">Download JPG</button>
       </div>
     `);
   });
@@ -975,6 +975,43 @@ function downloadSvgElement(id, filename) {
 
   const svgText = new XMLSerializer().serializeToString(svg);
   downloadText(svgText, filename, "image/svg+xml");
+}
+
+function downloadChrJpgElement(id, filename) {
+  const svg = document.getElementById(id);
+  if (!svg) return;
+
+  const svgText = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const img = new Image();
+
+  img.onload = function () {
+    const width = svg.viewBox.baseVal.width || svg.width.baseVal.value;
+    const height = svg.viewBox.baseVal.height || svg.height.baseVal.value;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
+
+    canvas.toBlob(function (jpgBlob) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(jpgBlob);
+      a.download = filename;
+      a.click();
+
+      URL.revokeObjectURL(a.href);
+      URL.revokeObjectURL(url);
+    }, "image/jpeg", 0.95);
+  };
+
+  img.src = url;
 }
 
 function escapeXml(value) {
