@@ -146,6 +146,13 @@ Tennessee State University
 
 ---
 
+## License
+
+This project is publicly available for academic and research viewing purposes only.  
+Reuse, redistribution, modification, or commercial use of the code, data, figures, or design requires prior written permission from the author.
+
+See the LICENSE file for details.
+
 ## Repository Structure
 
 ```text
