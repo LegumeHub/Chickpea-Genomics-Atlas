@@ -1,8 +1,8 @@
-# Chickpea Gene Expression Atlas v3.0
+# Chickpea Genomics Atlas v3.0
 
 ## Overview
 
-The Chickpea Gene Expression Atlas v3.0 is an interactive web resource for exploring gene expression across 32 chickpea tissues and developmental stages.
+The Chickpea Genomics Atlas v3.0 is an interactive web resource for exploring gene expression across 32 chickpea tissues and developmental stages.
 
 The website integrates expression data, gene annotations, transcription-factor information, Gene Ontology terms, InterPro and Pfam annotations, marker genes, housekeeping candidates, and chromosome information.
 
